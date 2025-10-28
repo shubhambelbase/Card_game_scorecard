@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Card Game Scoreboard</title>
+<style>
+  * {
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+  }
+
+  body {
+    background: linear-gradient(135deg, #2b1055, #7597de);
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 10px;
+    overflow-x: hidden;
+  }
+
+  h1 {
+    margin-bottom: 20px;
+    font-size: 2.3em;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  .card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 25px;
+    width: 100%;
+    max-width: 700px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  }
+
+  .add-player {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 25px;
+  }
+
+  .add-player input {
+    padding: 12px 15px;
+    border: none;
+    border-radius: 10px 0 0 10px;
+    outline: none;
+    width: 70%;
+    font-size: 1em;
+  }
+
+  .add-player button {
+    background: #ff4b2b;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 0 10px 10px 0;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .add-player button:hover {
+    background: #ff3a1a;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+  }
+
+  th, td {
+    padding: 14px;
+  }
+
+  th {
+    background: rgba(255, 255, 255, 0.15);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  }
+
+  td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 1.1em;
+  }
+
+  .score-btn {
+    padding: 15px 25px;
+    border: none;
+    border-radius: 12px;
+    margin: 0 8px;
+    cursor: pointer;
+    transition: 0.25s;
+    font-size: 1.2em;
+    font-weight: 700;
+  }
+
+  .add {
+    background: #4CAF50;
+    color: white;
+  }
+
+  .subtract {
+    background: #e74c3c;
+    color: white;
+  }
+
+  .score-btn:hover {
+    transform: scale(1.08);
+  }
+
+  .end-game {
+    display: block;
+    margin: 25px auto 10px;
+    background: #ffb400;
+    color: #222;
+    border: none;
+    padding: 14px 30px;
+    font-size: 1.2em;
+    font-weight: 700;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .end-game:hover {
+    background: #ffd65c;
+    transform: scale(1.05);
+  }
+
+  .footer {
+    margin-top: 15px;
+    text-align: center;
+    opacity: 0.7;
+  }
+
+  /* Popup styling */
+  .popup {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+  }
+
+  .popup-content {
+    background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+    color: #222;
+    border-radius: 20px;
+    padding: 30px 40px;
+    text-align: center;
+    max-width: 350px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    animation: pop 0.4s ease forwards;
+    position: relative;
+  }
+
+  @keyframes pop {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .popup h2 {
+    font-size: 1.8em;
+    margin-bottom: 10px;
+  }
+
+  .popup p {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+  }
+
+  .close-btn {
+    background: #222;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: 0.3s;
+  }
+
+  .close-btn:hover {
+    background: #333;
+  }
+
+  /* Confetti emoji explosion */
+  .confetti {
+    position: fixed;
+    font-size: 2rem;
+    animation: explode 2s linear forwards;
+    pointer-events: none;
+    z-index: 200;
+  }
+
+  @keyframes explode {
+    0% {
+      opacity: 1;
+      transform: translate(0, 0) rotate(0deg);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(var(--x), var(--y)) rotate(720deg);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .score-btn {
+      padding: 12px 18px;
+      font-size: 1em;
+      margin: 3px;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <h1>🃏 Card Game Scoreboard</h1>
+
+  <div class="card">
+    <div class="add-player">
+      <input type="text" id="playerName" placeholder="Enter player name">
+      <button onclick="addPlayer()">Add Player</button>
+    </div>
+
+    <table id="scoreTable">
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>Score</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Players will appear here -->
+      </tbody>
+    </table>
+
+    <button class="end-game" onclick="endGame()">🏁 End Game</button>
+  </div>
+
+  <p class="footer">Made with ❤️ for every card night</p>
+
+  <!-- Winner Popup -->
+  <div class="popup" id="winnerPopup">
+    <div class="popup-content">
+      <h2>🎉 Congratulations!</h2>
+      <p id="winnerText"></p>
+      <button class="close-btn" onclick="closePopup()">OK</button>
+    </div>
+  </div>
+
+  <!-- Winning Sound -->
+  <audio id="winSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_1e631f83c9.mp3?filename=success-fanfare-trumpets-6185.mp3"></audio>
+
+<script>
+  const tableBody = document.querySelector("#scoreTable tbody");
+  const popup = document.getElementById("winnerPopup");
+  const winnerText = document.getElementById("winnerText");
+  const winSound = document.getElementById("winSound");
+
+  function addPlayer() {
+    const nameInput = document.getElementById("playerName");
+    const name = nameInput.value.trim();
+    if (name === "") return alert("Please enter a player name!");
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${name}</td>
+      <td class="score">0</td>
+      <td>
+        <button class="score-btn add" onclick="changeScore(this, 1)">+1</button>
+        <button class="score-btn subtract" onclick="changeScore(this, -1)">−1</button>
+      </td>
+    `;
+    tableBody.appendChild(row);
+    nameInput.value = "";
+  }
+
+  function changeScore(button, value) {
+    const scoreCell = button.parentElement.parentElement.querySelector(".score");
+    let score = parseInt(scoreCell.textContent);
+    score += value;
+    scoreCell.textContent = score;
+  }
+
+  function endGame() {
+    const rows = tableBody.querySelectorAll("tr");
+    if (rows.length === 0) return alert("No players added!");
+
+    let winner = null;
+    let highest = -Infinity;
+
+    rows.forEach(row => {
+      const name = row.querySelector("td:first-child").textContent;
+      const score = parseInt(row.querySelector(".score").textContent);
+      if (score > highest) {
+        highest = score;
+        winner = name;
+      }
+    });
+
+    if (winner) {
+      winnerText.textContent = `${winner} wins with ${highest} points! 🎯`;
+      popup.style.display = "flex";
+      explodeEmojis("🎉");
+      winSound.play(); // 🔊 Play the winning sound
+    }
+  }
+
+  function closePopup() {
+    popup.style.display = "none";
+  }
+
+  // Emoji explosion animation
+  function explodeEmojis(emoji) {
+    const count = 40;
+    for (let i = 0; i < count; i++) {
+      const confetti = document.createElement("div");
+      confetti.classList.add("confetti");
+      confetti.textContent = emoji;
+      confetti.style.left = Math.random() * 100 + "vw";
+      confetti.style.top = Math.random() * 50 + 30 + "vh";
+      confetti.style.setProperty("--x", `${(Math.random() - 0.5) * 200}px`);
+      confetti.style.setProperty("--y", `${(Math.random() - 0.7) * 300}px`);
+      document.body.appendChild(confetti);
+      setTimeout(() => confetti.remove(), 2000);
+    }
+  }
+</script>
+
+</body>
+</html>
