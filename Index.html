@@ -271,6 +271,10 @@
         .game-controls {
             margin-top: 1.5rem;
             text-align: center;
+            /* --- NEW: Use flex for button spacing --- */
+            display: flex;
+            justify-content: center;
+            gap: 10px;
         }
 
         #btn-end-game {
@@ -284,6 +288,23 @@
         }
 
         #btn-end-game:disabled {
+            background-color: #555;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* --- NEW: Undo Button Styling --- */
+        #btn-undo {
+            background-color: var(--color-accent);
+            color: white;
+            padding: 0.75rem 2rem;
+        }
+        
+        #btn-undo:hover {
+            filter: brightness(1.2);
+        }
+        
+        #btn-undo:disabled {
             background-color: #555;
             opacity: 0.5;
             cursor: not-allowed;
@@ -397,6 +418,7 @@
             </div>
         
         <div class="game-controls">
+            <button id="btn-undo" class="btn" disabled>Undo</button>
             <button id="btn-end-game" class="btn">End Game</button>
         </div>
     </div>
@@ -417,6 +439,9 @@
             let rowHeight = 85; // Default height + margin for a row
             let emojiTimeouts = []; // Tracks emoji rain timeouts
             const STORAGE_KEY = 'cardGameScoreboard'; // Key for localStorage
+            
+            // --- NEW: State for Undo feature ---
+            let undoHistory = []; 
 
             // --- DOM SELECTORS ---
             const playerList = document.getElementById('player-list');
@@ -426,6 +451,9 @@
             const winnerOverlay = document.getElementById('winner-overlay');
             const winnerText = document.getElementById('winner-text');
             const btnNewGame = document.getElementById('btn-new-game');
+            
+            // --- NEW: Undo Button selector ---
+            const btnUndo = document.getElementById('btn-undo');
 
             // --- INITIALIZATION ---
             function init() {
@@ -444,6 +472,9 @@
                 
                 btnEndGame.addEventListener('click', handleEndGame);
                 btnNewGame.addEventListener('click', startNewGame);
+                
+                // --- NEW: Undo Button listener ---
+                btnUndo.addEventListener('click', handleUndo);
                 
                 // Click overlay to close it
                 winnerOverlay.addEventListener('click', (e) => {
@@ -556,6 +587,10 @@
                     // 3. Remove from state
                     players = players.filter(p => p.id !== id);
                     
+                    // --- NEW: Remove deleted player from undo history ---
+                    undoHistory = undoHistory.filter(action => action.playerId !== id);
+                    checkUndoButton();
+                    
                     // 4. Remove from DOM
                     playerRow.remove();
                     
@@ -600,11 +635,24 @@
                 }
             }
 
-
             /**
+             * --- UPDATED: This function now logs history and calls applyScoreChange ---
              * Updates a player's score, triggers animations, and re-sorts
              */
             function updateScore(id, amount) {
+                // --- NEW: Add this action to the undo history ---
+                undoHistory.push({ playerId: id, amount: amount });
+                checkUndoButton(); // Enable the undo button
+
+                // Apply the actual change
+                applyScoreChange(id, amount);
+            }
+
+            /**
+             * --- NEW: This function applies a score change WITHOUT logging history ---
+             * It's used by both updateScore() and handleUndo()
+             */
+            function applyScoreChange(id, amount) {
                 const player = players.find(p => p.id === id);
                 if (!player) return;
                 player.score += amount;
@@ -621,6 +669,23 @@
 
                 updatePlayerList(); // Re-sort and save
                 checkEndGameButton();
+            }
+            
+            /**
+             * --- NEW: Handles the Undo button click ---
+             */
+            function handleUndo() {
+                if (undoHistory.length === 0) return;
+                
+                const lastAction = undoHistory.pop();
+                checkUndoButton(); // Update button state
+                
+                // Find player (they may have been deleted)
+                const player = players.find(p => p.id === lastAction.playerId);
+                if (!player) return; // Player was deleted, so we just discard the undo.
+                
+                const reverseAmount = -lastAction.amount;
+                applyScoreChange(lastAction.playerId, reverseAmount);
             }
 
             /**
@@ -682,7 +747,6 @@
             }
 
             /**
-             * --- FUNCTION UPDATED ---
              * Resets the game to its initial state, but keeps players.
              */
             function startNewGame() {
@@ -690,6 +754,9 @@
             
                 // 1. Reset state (scores only)
                 players.forEach(p => p.score = 0);
+                
+                // --- NEW: Clear undo history ---
+                undoHistory = [];
                 
                 // 2. Reset DOM scores
                 document.querySelectorAll('.player-row .player-score').forEach(scoreEl => {
@@ -702,11 +769,13 @@
                 // 4. Re-sort and save the new state (scores at 0)
                 updatePlayerList(); 
                 
-                // 5. Re-check end game button state (will be disabled)
+                // 5. Re-check button states
                 checkEndGameButton();
+                checkUndoButton();
             }
             
             /**
+             * --- UPDATED: Now also handles the Undo button ---
              * Helper to enable/disable ALL game controls
              */
             function setControlsDisabled(disabled) {
@@ -720,9 +789,11 @@
                 // Special handling for End Game button
                 if (disabled) {
                     btnEndGame.disabled = true;
+                    btnUndo.disabled = true; // --- NEW ---
                 } else {
                     // When re-enabling, check if it SHOULD be enabled
                     checkEndGameButton();
+                    checkUndoButton(); // --- NEW ---
                 }
             }
             
@@ -733,6 +804,13 @@
                 // Check if any player has a score other than 0
                 const canEndGame = players.length > 0 && players.some(p => p.score !== 0);
                 btnEndGame.disabled = !canEndGame;
+            }
+            
+            /**
+             * --- NEW: Enables/Disables Undo button based on history ---
+             */
+            function checkUndoButton() {
+                btnUndo.disabled = (undoHistory.length === 0);
             }
 
             /* --- LOCALSTORAGE FUNCTIONS --- */
@@ -772,6 +850,7 @@
                     updatePlayerList();
                     // Set correct button state
                     checkEndGameButton();
+                    checkUndoButton(); // History is empty on load
                 }
             }
 
