@@ -1,263 +1,767 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Card Game Score</title>
-<style>
-* { box-sizing: border-box; font-family:"Poppins", sans-serif; }
-body {
-  background: linear-gradient(135deg, #000000, #1a1a1a, #2c2c2c);
-  color:#fff;
-  min-height:100vh;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  padding:30px 10px;
-}
-h1 {
-  font-size:2.3em;
-  margin-bottom:20px;
-  text-align:center;
-  background: linear-gradient(90deg, #00f5ff, #ff00e6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 10px rgba(255,255,255,0.2);
-}
-.card {
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(15px);
-  border-radius:25px;
-  padding:30px;
-  width:100%;
-  max-width:650px;
-  box-shadow:0 15px 40px rgba(0,0,0,0.6);
-}
-.controls {
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:25px;
-}
-input {
-  padding:12px 15px;
-  border:none;
-  border-radius:12px;
-  outline:none;
-  width:220px;
-  font-size:1em;
-  background: rgba(255,255,255,0.1);
-  color:#fff;
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
-}
-input::placeholder { color:#ccc; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Game Scoreboard</title>
+    
+    <style>
+        :root {
+            --dark-bg: #1a1a1a;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --color-positive: #4caf50;
+            --color-negative: #f44336;
+            --color-accent: #2196F3;
+        }
 
-button {
-  border:none;
-  padding:12px 22px;
-  border-radius:15px;
-  font-weight:bold;
-  cursor:pointer;
-  font-size:1em;
-  transition:0.3s;
-  color:#fff;
-  box-shadow:0 4px 20px rgba(0,0,0,0.4);
-}
-button:hover { transform:scale(1.08); }
+        /* --- Base & Body --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
 
-.add { background: linear-gradient(45deg,#00ff87,#60efff); }
-.subtract { background: linear-gradient(45deg,#ff5858,#f09819); }
-.end-game { background: linear-gradient(45deg,#ff00cc,#333399); }
-.new-game { background: linear-gradient(45deg,#00c6ff,#0072ff); }
-button#addPlayerBtn { background: linear-gradient(45deg,#ff6a00,#ee0979); }
+        html, body {
+            height: 100%;
+        }
 
-table {
-  width:100%;
-  border-collapse:collapse;
-  text-align:center;
-  margin-top:10px;
-}
-th, td { padding:14px; }
-th {
-  background: rgba(255,255,255,0.1);
-  color:#00f5ff;
-  border-radius:10px;
-}
-td {
-  border-bottom:1px solid rgba(255,255,255,0.1);
-  font-weight:600;
-  font-size:1.1em;
-  position:relative;
-}
-.score-btn {
-  padding:10px 18px;
-  border-radius:12px;
-  margin:0 5px;
-  cursor:pointer;
-  font-weight:700;
-  font-size:1em;
-  transition:0.2s;
-  color:#fff;
-  box-shadow:0 3px 8px rgba(0,0,0,0.3);
-}
-.score-btn:hover { transform:scale(1.1); }
+        body {
+            background: var(--dark-bg);
+            /* Dark radial gradient for a "vignette" effect */
+            background-image: radial-gradient(circle, #3a3a3a, #1a1a1a);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 2rem 1rem;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
 
-.floating {
-  position:absolute;
-  font-weight:bold;
-  font-size:1.2em;
-  animation:floating 1s ease-out forwards;
-  color:#0ff;
-  text-shadow:0 0 6px rgba(0,255,255,0.5);
-}
-@keyframes floating {
-  0%{opacity:1; transform:translateY(0);}
-  100%{opacity:0; transform:translateY(-30px) scale(1.3);}
-}
+        /* --- Main Scoreboard Container (Glass) --- */
+        .scoreboard-container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            padding: 1.5rem 2rem;
+            overflow: hidden;
+        }
 
-.popup {
-  position:fixed; top:0; left:0; width:100%; height:100%;
-  background:rgba(0,0,0,0.8);
-  display:none; justify-content:center; align-items:center;
-  z-index:100;
-}
-.popup-content {
-  background: linear-gradient(135deg,#232526,#414345);
-  color:#fff;
-  border-radius:25px;
-  padding:40px 50px;
-  text-align:center;
-  box-shadow:0 10px 40px rgba(0,0,0,0.6);
-  animation:pop 0.4s ease forwards;
-}
-.popup-content button {
-  background: linear-gradient(45deg,#43e97b,#38f9d7);
-  color:#000;
-}
-@keyframes pop {
-  0%{transform:scale(0.5); opacity:0;}
-  100%{transform:scale(1); opacity:1;}
-}
+        h1 {
+            text-align: center;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
 
-.confetti {
-  position:fixed;
-  font-size:2rem;
-  animation:explode 3s linear forwards;
-  pointer-events:none;
-  z-index:200;
-}
-@keyframes explode {
-  0%{opacity:1; transform:translate(0,0) rotate(0deg);}
-  100%{opacity:0; transform:translate(var(--x),var(--y)) rotate(720deg);}
-}
-</style>
+        /* --- Add Player Form --- */
+        .add-player-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        #input-player-name {
+            flex-grow: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        #input-player-name:focus {
+            border-color: var(--color-accent);
+            box-shadow: 0 0 8px 0 rgba(33, 150, 243, 0.5);
+        }
+
+        .btn {
+            padding: 0.75rem 1.25rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        #btn-add-player {
+            background-color: var(--color-accent);
+            color: white;
+        }
+
+        #btn-add-player:hover {
+            filter: brightness(1.2);
+        }
+
+        /* --- Player List --- */
+        .player-list {
+            position: relative; /* Crucial for "top" animation */
+            transition: height 0.5s ease-in-out;
+            border-top: 1px solid var(--glass-border);
+            padding-top: 1.5rem;
+            min-height: 50px; /* Ensures container is visible even when empty */
+        }
+
+        .player-row {
+            display: grid;
+            grid-template-columns: 2.5fr 1fr 3fr; /* Name | Score | Controls */
+            align-items: center;
+            gap: 1rem;
+            
+            /* Glass effect for each row */
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            
+            /* Animation properties */
+            position: absolute;
+            width: 100%;
+            transition: top 0.5s ease-in-out, background-color 0.3s, 
+                        transform 0.4s ease, opacity 0.4s ease;
+        }
+        
+        /* --- NEW: Deletion Animation --- */
+        .player-row.deleting {
+            transform: translateX(100%) scale(0.8);
+            opacity: 0;
+        }
+
+        /* --- Row Animations --- */
+        @keyframes flash-positive {
+            0% { background-color: rgba(76, 175, 80, 0.5); transform: scale(1.02); }
+            100% { background-color: var(--glass-bg); transform: scale(1); }
+        }
+
+        @keyframes flash-negative {
+            0% { background-color: rgba(244, 67, 54, 0.5); transform: scale(1.02); }
+            100% { background-color: var(--glass-bg); transform: scale(1); }
+        }
+
+        .player-row.flash-positive {
+            animation: flash-positive 0.5s ease-out;
+        }
+
+        .player-row.flash-negative {
+            animation: flash-negative 0.5s ease-out;
+        }
+
+        /* --- Player Row Content --- */
+        
+        /* --- NEW: Container for Name + Delete Btn --- */
+        .player-name-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            overflow: hidden; /* Prevents long names from breaking layout */
+        }
+
+        /* --- UPDATED: Editable Player Name --- */
+        .player-name {
+            font-size: 1.2rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: text;
+            padding: 5px;
+            border-radius: 6px;
+            outline: none;
+            flex-grow: 1; /* Takes up available space */
+            min-width: 0; /* Fix for flexbox overflow */
+        }
+        
+        .player-name:focus {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 0 8px 0 rgba(33, 150, 243, 0.5);
+            white-space: normal; /* Allows wrapping while editing */
+        }
+
+        /* --- NEW: Delete Player Button --- */
+        .btn-delete {
+            background: rgba(244, 67, 54, 0.3);
+            border: 1px solid rgba(244, 67, 54, 0.5);
+            color: var(--text-primary);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0; /* Prevents button from squishing */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-bottom: 2px; /* Optical centering for 'x' */
+        }
+
+        .btn-delete:hover {
+            background: rgba(244, 67, 54, 0.6);
+        }
+        
+        .btn-delete:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .player-score {
+            font-size: 1.75rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--color-accent);
+        }
+
+        .player-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .btn-score {
+            font-size: 1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .btn-score.positive {
+            background: rgba(76, 175, 80, 0.3);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+        }
+        .btn-score.positive:hover {
+            background: rgba(76, 175, 80, 0.6);
+        }
+
+        .btn-score.negative {
+            background: rgba(244, 67, 54, 0.3);
+            border: 1px solid rgba(244, 67, 54, 0.5);
+        }
+        .btn-score.negative:hover {
+            background: rgba(244, 67, 54, 0.6);
+        }
+        
+        .btn-score:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* --- Game Controls --- */
+        .game-controls {
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        #btn-end-game {
+            background-color: var(--color-negative);
+            color: white;
+            padding: 0.75rem 2rem;
+        }
+
+        #btn-end-game:hover {
+            filter: brightness(1.2);
+        }
+
+        #btn-end-game:disabled {
+            background-color: #555;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* --- Winner Overlay --- */
+        #winner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        #winner-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .winner-box {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            padding: 3rem 4rem;
+            text-align: center;
+            
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.4s ease 0.1s;
+        }
+        
+        #winner-overlay.show .winner-box {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .winner-box h2 {
+            font-size: 1.5rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        #winner-text {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-accent);
+            margin-bottom: 2rem;
+            max-width: 400px;
+        }
+
+        #btn-new-game {
+            background-color: var(--color-positive);
+            color: white;
+            padding: 0.75rem 2rem;
+        }
+
+        #btn-new-game:hover {
+            filter: brightness(1.2);
+        }
+
+        /* --- EMOJI RAIN CSS --- */
+        .emoji-rain {
+            position: fixed;
+            top: -50px; /* Start off-screen */
+            font-size: 2rem;
+            animation-name: fall;
+            animation-timing-function: linear;
+            z-index: 2000; /* Above the winner overlay */
+            pointer-events: none; /* So they don't block the button */
+        }
+        
+        @keyframes fall {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(110vh); /* Fall 110% of screen height */
+                opacity: 0;
+            }
+        }
+
+    </style>
 </head>
 <body>
 
-<h1>🃏 Card Game Scoreboard</h1>
+    <div class="scoreboard-container">
+        <h1>Card Game Scoreboard</h1>
 
-<div class="card">
-  <div class="controls">
-    <input type="text" id="playerName" placeholder="Enter player name">
-    <button id="addPlayerBtn" onclick="addPlayer()">Add Player</button>
-    <button class="end-game" onclick="endGame()">🏁 End Game</button>
-    <button class="new-game" onclick="newGame()">🔄 New Game</button>
-  </div>
+        <div class="add-player-form">
+            <input type="text" id="input-player-name" placeholder="Enter player name...">
+            <button id="btn-add-player" class="btn">Add Player</button>
+        </div>
 
-  <table id="scoreTable">
-    <thead>
-      <tr><th>Player</th><th>Score</th><th>Action</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
+        <div class="player-list" id="player-list">
+            </div>
+        
+        <div class="game-controls">
+            <button id="btn-end-game" class="btn">End Game</button>
+        </div>
+    </div>
 
-<div class="popup" id="winnerPopup">
-  <div class="popup-content">
-    <h2>🎉 Congratulations!</h2>
-    <p id="winnerText"></p>
-    <button onclick="closePopup()">OK</button>
-  </div>
-</div>
+    <div id="winner-overlay">
+        <div class="winner-box">
+            <h2>The Winner is...</h2>
+            <h3 id="winner-text">Player 1</h3>
+            <button id="btn-new-game" class="btn">Start New Game</button>
+        </div>
+    </div>
 
-<audio id="winSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_1e631f83c9.mp3?filename=success-fanfare-trumpets-6185.mp3"></audio>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
 
-<script>
-const tableBody = document.querySelector("#scoreTable tbody");
-const popup = document.getElementById("winnerPopup");
-const winnerText = document.getElementById("winnerText");
-const winSound = document.getElementById("winSound");
+            // --- STATE ---
+            let players = [];
+            let rowHeight = 85; // Default height + margin for a row
+            let emojiTimeouts = []; // Tracks emoji rain timeouts
 
-function addPlayer(){
-  const nameInput = document.getElementById("playerName");
-  const name = nameInput.value.trim();
-  if(name==="") return alert("Enter player name!");
-  for(let row of tableBody.rows){ if(row.cells[0].textContent===name) return alert("Player exists!"); }
-  const row = document.createElement("tr");
-  row.innerHTML=`<td>${name}</td><td class="score">0</td>
-  <td>
-    <button class="score-btn add" onclick="changeScore(this,1)">+1</button>
-    <button class="score-btn subtract" onclick="changeScore(this,-1)">−1</button>
-  </td>`;
-  tableBody.appendChild(row);
-  nameInput.value="";
-}
+            // --- DOM SELECTORS ---
+            const playerList = document.getElementById('player-list');
+            const inputPlayerName = document.getElementById('input-player-name');
+            const btnAddPlayer = document.getElementById('btn-add-player');
+            const btnEndGame = document.getElementById('btn-end-game');
+            const winnerOverlay = document.getElementById('winner-overlay');
+            const winnerText = document.getElementById('winner-text');
+            const btnNewGame = document.getElementById('btn-new-game');
 
-function changeScore(button,value){
-  const scoreCell = button.parentElement.parentElement.querySelector(".score");
-  let score = parseInt(scoreCell.textContent);
-  score+=value;
-  scoreCell.textContent = score;
-  showFloating(scoreCell, value);
-}
+            // --- INITIALIZATION ---
+            function init() {
+                // Add event listeners
+                btnAddPlayer.addEventListener('click', handleAddPlayer);
+                inputPlayerName.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') handleAddPlayer();
+                });
+                
+                // Use event delegation for score and delete buttons
+                playerList.addEventListener('click', handlePlayerListClick);
+                
+                // --- NEW: Event listeners for editable names ---
+                playerList.addEventListener('keydown', handleNameKeydown);
+                playerList.addEventListener('blur', handleNameBlur, true); // Use capture phase
+                
+                btnEndGame.addEventListener('click', handleEndGame);
+                btnNewGame.addEventListener('click', startNewGame);
+            }
+            
+            // --- CORE FUNCTIONS ---
 
-function showFloating(cell,value){
-  const float = document.createElement("div");
-  float.classList.add("floating");
-  float.textContent = (value>0?"+1":"−1");
-  cell.appendChild(float);
-  setTimeout(()=>float.remove(),1000);
-}
+            /**
+             * Handles adding a new player
+             */
+            function handleAddPlayer() {
+                const name = inputPlayerName.value.trim();
+                if (name) {
+                    addPlayer(name);
+                    inputPlayerName.value = '';
+                }
+            }
 
-function endGame(){
-  if(tableBody.rows.length===0) return alert("Add players first!");
-  let winner=null, high=-Infinity;
-  for(let row of tableBody.rows){
-    const total = parseInt(row.querySelector(".score").textContent);
-    if(total>high){ high=total; winner=row.cells[0].textContent; }
-  }
-  if(winner){
-    winnerText.textContent=`${winner} wins with ${high} points! 🎯`;
-    popup.style.display="flex";
-    explodeEmojis("🎉",3000);
-    winSound.play();
-  }
-}
+            /**
+             * Adds a player to the state and creates their DOM element
+             */
+            function addPlayer(name) {
+                const newPlayer = {
+                    id: Date.now(),
+                    name: name,
+                    score: 0
+                };
+                players.push(newPlayer);
+                
+                const playerEl = createPlayerElement(newPlayer);
+                
+                // Get row height dynamically on first add
+                if (players.length === 1) {
+                    // Temporarily add to DOM to measure, then remove to let updatePlayerList place it
+                    playerList.appendChild(playerEl);
+                    rowHeight = playerEl.offsetHeight + 16; // 16px for a consistent gap
+                    playerList.removeChild(playerEl); 
+                }
+                
+                playerList.appendChild(playerEl);
+                // Recalculate positions
+                updatePlayerList();
+            }
 
-function newGame(){
-  tableBody.innerHTML="";
-  document.getElementById("playerName").value="";
-}
-function closePopup(){
-  popup.style.display="none";
-}
-function explodeEmojis(emoji,duration=3000){
-  const interval=50; const total=duration/interval; let count=0;
-  const timer=setInterval(()=>{
-    const confetti=document.createElement("div");
-    confetti.classList.add("confetti");
-    confetti.textContent=emoji;
-    confetti.style.left=Math.random()*100+"vw";
-    confetti.style.top=Math.random()*50+"vh";
-    confetti.style.setProperty("--x",`${(Math.random()-0.5)*200}px`);
-    confetti.style.setProperty("--y",`${(Math.random()-0.7)*300}px`);
-    document.body.appendChild(confetti);
-    setTimeout(()=>confetti.remove(),3000);
-    count++; if(count>=total) clearInterval(timer);
-  },interval);
-}
-</script>
+            /**
+             * Creates the HTML element for a single player
+             */
+            function createPlayerElement(player) {
+                const row = document.createElement('div');
+                row.className = 'player-row';
+                row.dataset.playerId = player.id;
+                
+                // --- UPDATED: New HTML structure for name/delete ---
+                row.innerHTML = `
+                    <div class="player-name-container">
+                        <div class="player-name" contenteditable="true" spellcheck="false" title="Click to edit">${player.name}</div>
+                        <button class="btn-delete" title="Delete player">&times;</button>
+                    </div>
+                    <span class="player-score">0</span>
+                    <div class="player-controls">
+                        <button class="btn-score positive" data-amount="3">+3</button>
+                        <button class="btn-score positive" data-amount="2">+2</button>
+                        <button class="btn-score positive" data-amount="1">+1</button>
+                        <button class="btn-score negative" data-amount="-1">-1</button>
+                    </div>
+                `;
+                return row;
+            }
 
+            /**
+             * Handles clicks inside the player list (delegated)
+             */
+            function handlePlayerListClick(e) {
+                // --- Check for Score Button click ---
+                const scoreButton = e.target.closest('.btn-score');
+                if (scoreButton && !scoreButton.disabled) {
+                    const amount = parseInt(scoreButton.dataset.amount, 10);
+                    const playerRow = e.target.closest('.player-row');
+                    const id = parseInt(playerRow.dataset.playerId, 10);
+                    
+                    updateScore(id, amount);
+                }
+                
+                // --- NEW: Check for Delete Button click ---
+                const deleteButton = e.target.closest('.btn-delete');
+                if (deleteButton && !deleteButton.disabled) {
+                    handleDeletePlayer(deleteButton);
+                }
+            }
+            
+            /**
+             * --- NEW: Handles deleting a player ---
+             */
+            function handleDeletePlayer(button) {
+                const playerRow = button.closest('.player-row');
+                const id = parseInt(playerRow.dataset.playerId, 10);
+                
+                // 1. Add animation class
+                playerRow.classList.add('deleting');
+                
+                // 2. Wait for animation to finish
+                setTimeout(() => {
+                    // 3. Remove from state
+                    players = players.filter(p => p.id !== id);
+                    
+                    // 4. Remove from DOM
+                    playerRow.remove();
+                    
+                    // 5. Re-sort and animate remaining players
+                    updatePlayerList();
+                }, 400); // Must match CSS transition duration
+            }
+            
+            /**
+             * --- NEW: Handles 'Enter' key on editable names ---
+             */
+            function handleNameKeydown(e) {
+                if (e.target.classList.contains('player-name')) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault(); // Prevent new line
+                        e.target.blur();    // Trigger blur to save
+                    }
+                }
+            }
+            
+            /**
+             * --- NEW: Handles saving the name on blur ---
+             */
+            function handleNameBlur(e) {
+                if (e.target.classList.contains('player-name')) {
+                    const playerRow = e.target.closest('.player-row');
+                    const id = parseInt(playerRow.dataset.playerId, 10);
+                    const player = players.find(p => p.id === id);
+                    
+                    if (!player) return; // Player already being deleted
+                    
+                    const newName = e.target.textContent.trim();
+                    
+                    if (newName) {
+                        player.name = newName;
+                        e.target.textContent = newName; // Ensure trimmed name is displayed
+                    } else {
+                        // Restore old name if left blank
+                        e.target.textContent = player.name;
+                    }
+                }
+            }
+
+
+            /**
+             * Updates a player's score, triggers animations, and re-sorts
+             */
+            function updateScore(id, amount) {
+                // 1. Update state
+                const player = players.find(p => p.id === id);
+                if (!player) return;
+                player.score += amount;
+                
+                // 2. Update DOM
+                const playerRow = document.querySelector(`[data-player-id="${id}"]`);
+                if (!playerRow) return;
+                
+                const scoreSpan = playerRow.querySelector('.player-score');
+                scoreSpan.textContent = player.score;
+                
+                // 3. Trigger flash animation
+                const flashClass = amount > 0 ? 'flash-positive' : 'flash-negative';
+                playerRow.classList.add(flashClass);
+                setTimeout(() => playerRow.classList.remove(flashClass), 500);
+
+                // 4. Re-sort and animate
+                updatePlayerList();
+            }
+
+            /**
+             * Sorts players and animates them to new positions
+             */
+            function updatePlayerList() {
+                // 1. Sort the state array
+                players.sort((a, b) => b.score - a.score);
+                
+                // 2. Update parent container height
+                const totalHeight = players.length * rowHeight;
+                playerList.style.height = `${totalHeight}px`;
+
+                // 3. Animate positions
+                players.forEach((player, index) => {
+                    const playerRow = document.querySelector(`[data-player-id="${player.id}"]`);
+                    if (playerRow) {
+                        playerRow.style.top = `${index * rowHeight}px`;
+                    }
+                });
+            }
+            
+            /**
+             * Ends the game, calculates winner, and shows overlay
+             */
+            function handleEndGame() {
+                setControlsDisabled(true);
+                
+                if (players.length === 0) {
+                    winnerText.textContent = "No players!";
+                    winnerOverlay.classList.add('show');
+                    return;
+                }
+                
+                // Find winner(s)
+                const maxScore = Math.max(...players.map(p => p.score));
+                const winners = players.filter(p => p.score === maxScore);
+                
+                let winnerMessage = "";
+                if (winners.length > 1) {
+                    winnerMessage = "It's a tie between: " + winners.map(p => p.name).join(', ');
+                } else {
+                    winnerMessage = winners[0].name;
+                }
+                
+                winnerText.textContent = winnerMessage;
+                winnerOverlay.classList.add('show');
+                
+                // Trigger the emoji rain!
+                startEmojiRain();
+            }
+
+            /**
+             * Resets the game to its initial state
+             */
+            function startNewGame() {
+                // 1. Stop the rain
+                document.querySelectorAll('.emoji-rain').forEach(emoji => emoji.remove());
+                emojiTimeouts.forEach(clearTimeout);
+                emojiTimeouts = [];
+            
+                // 2. Reset state
+                players.forEach(p => p.score = 0);
+                
+                // 3. Reset DOM scores
+                document.querySelectorAll('.player-row').forEach(row => {
+                    row.querySelector('.player-score').textContent = '0';
+                });
+                
+                // 4. Hide overlay and re-enable controls
+                winnerOverlay.classList.remove('show');
+                setControlsDisabled(false);
+                
+                // 5. Re-sort (to original order if scores are 0, or just reset positions)
+                updatePlayerList();
+            }
+            
+            /**
+             * --- UPDATED: Helper to enable/disable ALL game controls ---
+             */
+            function setControlsDisabled(disabled) {
+                // Disable score buttons
+                document.querySelectorAll('.btn-score').forEach(btn => {
+                    btn.disabled = disabled;
+                });
+                
+                // NEW: Disable delete buttons
+                document.querySelectorAll('.btn-delete').forEach(btn => {
+                    btn.disabled = disabled;
+                });
+                
+                // NEW: Disable name editing
+                document.querySelectorAll('.player-name').forEach(name => {
+                    name.contentEditable = !disabled;
+                });
+                
+                // Disable main game controls
+                btnEndGame.disabled = disabled;
+                btnAddPlayer.disabled = disabled;
+                inputPlayerName.disabled = disabled;
+            }
+
+            /* --- EMOJI RAIN JAVASCRIPT --- */
+
+            /**
+             * Creates a single falling emoji
+             */
+            function createEmoji() {
+                const emoji = document.createElement('div');
+                emoji.classList.add('emoji-rain');
+                emoji.innerText = '🎉';
+                
+                // Random horizontal position
+                emoji.style.left = Math.random() * 100 + 'vw';
+                
+                // Random animation duration (3 to 5 seconds)
+                emoji.style.animationDuration = (Math.random() * 2 + 3) + 's';
+                
+                // Random delay (0 to 5 seconds)
+                emoji.style.animationDelay = (Math.random() * 5) + 's';
+                
+                // Remove emoji from DOM after it finishes falling
+                emoji.addEventListener('animationend', () => {
+                    emoji.remove();
+                });
+                
+                document.body.appendChild(emoji);
+            }
+            
+            /**
+             * Starts the emoji rain effect
+             * @param {number} count - Number of emojis to create.
+             */
+            function startEmojiRain(count = 50) {
+                emojiTimeouts.forEach(clearTimeout);
+                emojiTimeouts = [];
+
+                for (let i = 0; i < count; i++) {
+                    const timeoutId = setTimeout(() => {
+                        createEmoji();
+                        emojiTimeouts = emojiTimeouts.filter(id => id !== timeoutId);
+                    }, i * 100);
+                    
+                    emojiTimeouts.push(timeoutId);
+                }
+            }
+            /* --- END EMOJI JAVASCRIPT --- */
+
+
+            // --- RUN ---
+            init();
+        });
+    </script>
 </body>
 </html>
