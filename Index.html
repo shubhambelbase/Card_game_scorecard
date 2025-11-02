@@ -64,15 +64,27 @@
             color: var(--text-primary);
         }
 
-        /* --- Add Player Form --- */
-        .add-player-form {
+        /* --- NEW: Winning Score & Add Player Forms --- */
+        .game-setup {
             display: flex;
             gap: 10px;
             margin-bottom: 1.5rem;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+        }
+        
+        .winning-score-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-grow: 1; /* Take up space */
+        }
+        
+        .winning-score-container label {
+            font-weight: 500;
+            white-space: nowrap;
         }
 
-        #input-player-name {
-            flex-grow: 1;
+        .input-glass {
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid var(--glass-border);
             border-radius: 8px;
@@ -82,10 +94,25 @@
             outline: none;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
-
-        #input-player-name:focus {
+        
+        .input-glass:focus {
             border-color: var(--color-accent);
             box-shadow: 0 0 8px 0 rgba(33, 150, 243, 0.5);
+        }
+        
+        #input-winning-score {
+            width: 100px; /* Fixed width for score */
+        }
+
+        .add-player-form {
+            display: flex;
+            gap: 10px;
+            flex-grow: 2; /* Take up more space */
+            min-width: 250px; /* Ensure it doesn't get too small */
+        }
+
+        #input-player-name {
+            flex-grow: 1;
         }
 
         .btn {
@@ -271,7 +298,6 @@
         .game-controls {
             margin-top: 1.5rem;
             text-align: center;
-            /* --- NEW: Use flex for button spacing --- */
             display: flex;
             justify-content: center;
             gap: 10px;
@@ -293,7 +319,6 @@
             cursor: not-allowed;
         }
         
-        /* --- NEW: Undo Button Styling --- */
         #btn-undo {
             background-color: var(--color-accent);
             color: white;
@@ -409,9 +434,16 @@
     <div class="scoreboard-container">
         <h1>Card Game Scoreboard</h1>
 
-        <div class="add-player-form">
-            <input type="text" id="input-player-name" placeholder="Enter player name...">
-            <button id="btn-add-player" class="btn">Add Player</button>
+        <div class="game-setup">
+            <div class="winning-score-container">
+                <label for="input-winning-score">Set Winning Score:</label>
+                <input type="number" id="input-winning-score" class="input-glass" min="1">
+            </div>
+            
+            <div class="add-player-form">
+                <input type="text" id="input-player-name" class="input-glass" placeholder="Enter player name...">
+                <button id="btn-add-player" class="btn">Add Player</button>
+            </div>
         </div>
 
         <div class="player-list" id="player-list">
@@ -439,9 +471,10 @@
             let rowHeight = 85; // Default height + margin for a row
             let emojiTimeouts = []; // Tracks emoji rain timeouts
             const STORAGE_KEY = 'cardGameScoreboard'; // Key for localStorage
-            
-            // --- NEW: State for Undo feature ---
             let undoHistory = []; 
+            
+            // --- NEW: State for Winning Score ---
+            let winningScore = 0;
 
             // --- DOM SELECTORS ---
             const playerList = document.getElementById('player-list');
@@ -451,9 +484,10 @@
             const winnerOverlay = document.getElementById('winner-overlay');
             const winnerText = document.getElementById('winner-text');
             const btnNewGame = document.getElementById('btn-new-game');
-            
-            // --- NEW: Undo Button selector ---
             const btnUndo = document.getElementById('btn-undo');
+            
+            // --- NEW: Winning Score selector ---
+            const inputWinningScore = document.getElementById('input-winning-score');
 
             // --- INITIALIZATION ---
             function init() {
@@ -462,6 +496,9 @@
                 inputPlayerName.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') handleAddPlayer();
                 });
+                
+                // --- NEW: Listener for Winning Score input ---
+                inputWinningScore.addEventListener('change', handleWinningScoreChange);
                 
                 // Use event delegation for score and delete buttons
                 playerList.addEventListener('click', handlePlayerListClick);
@@ -472,13 +509,10 @@
                 
                 btnEndGame.addEventListener('click', handleEndGame);
                 btnNewGame.addEventListener('click', startNewGame);
-                
-                // --- NEW: Undo Button listener ---
                 btnUndo.addEventListener('click', handleUndo);
                 
                 // Click overlay to close it
                 winnerOverlay.addEventListener('click', (e) => {
-                    // Only close if clicking the overlay itself, not the box
                     if (e.target === winnerOverlay) {
                         closeWinnerOverlay();
                     }
@@ -587,7 +621,7 @@
                     // 3. Remove from state
                     players = players.filter(p => p.id !== id);
                     
-                    // --- NEW: Remove deleted player from undo history ---
+                    // Remove deleted player from undo history
                     undoHistory = undoHistory.filter(action => action.playerId !== id);
                     checkUndoButton();
                     
@@ -636,11 +670,23 @@
             }
 
             /**
-             * --- UPDATED: This function now logs history and calls applyScoreChange ---
-             * Updates a player's score, triggers animations, and re-sorts
+             * --- NEW: Handles updating the winning score ---
+             */
+            function handleWinningScoreChange() {
+                winningScore = parseInt(inputWinningScore.value, 10) || 0;
+                // If score is 0 or less, clear the input
+                if (winningScore <= 0) {
+                    winningScore = 0;
+                    inputWinningScore.value = '';
+                }
+                saveGame();
+            }
+
+            /**
+             * Updates a player's score, logs history, and calls applyScoreChange
              */
             function updateScore(id, amount) {
-                // --- NEW: Add this action to the undo history ---
+                // Add this action to the undo history
                 undoHistory.push({ playerId: id, amount: amount });
                 checkUndoButton(); // Enable the undo button
 
@@ -649,12 +695,16 @@
             }
 
             /**
-             * --- NEW: This function applies a score change WITHOUT logging history ---
-             * It's used by both updateScore() and handleUndo()
+             * --- UPDATED: Now checks for winner ---
+             * Applies a score change WITHOUT logging history
              */
             function applyScoreChange(id, amount) {
                 const player = players.find(p => p.id === id);
                 if (!player) return;
+                
+                // Check if game is already over (e.g., via Undo)
+                const gameAlreadyOver = btnEndGame.disabled;
+
                 player.score += amount;
                 
                 const playerRow = document.querySelector(`[data-player-id="${id}"]`);
@@ -669,13 +719,28 @@
 
                 updatePlayerList(); // Re-sort and save
                 checkEndGameButton();
+
+                // --- NEW: Check for winner ---
+                // Only trigger if winning score is set, player's score is high enough,
+                // and the game isn't *already* in an "ended" state.
+                if (!gameAlreadyOver && winningScore > 0 && player.score >= winningScore) {
+                    // Use a timeout to let the flash animation play, then end game
+                    setTimeout(() => {
+                        handleEndGame();
+                    }, 500); // Wait for flash to finish
+                }
             }
             
             /**
-             * --- NEW: Handles the Undo button click ---
+             * Handles the Undo button click
              */
             function handleUndo() {
                 if (undoHistory.length === 0) return;
+                
+                // If game is over, re-enable controls
+                if (btnEndGame.disabled) {
+                    setControlsDisabled(false);
+                }
                 
                 const lastAction = undoHistory.pop();
                 checkUndoButton(); // Update button state
@@ -719,12 +784,21 @@
                     return;
                 }
                 
+                // Find highest score (could be more than winningScore if +3 pushed it over)
                 const maxScore = Math.max(...players.map(p => p.score));
+                
+                // Find all players with that high score
                 const winners = players.filter(p => p.score === maxScore);
                 
                 let winnerMessage = "";
                 if (winners.length > 1) {
-                    winnerMessage = "It's a tie between: " + winners.map(p => p.name).join(', ');
+                    // Check if it's a tie *at or above* the winning score
+                    if (winningScore > 0 && maxScore >= winningScore) {
+                        winnerMessage = `It's a tie at ${maxScore} between: ${winners.map(p => p.name).join(', ')}`;
+                    } else {
+                        // Manual end game tie
+                        winnerMessage = `It's a tie between: ${winners.map(p => p.name).join(', ')}`;
+                    }
                 } else {
                     winnerMessage = winners[0].name;
                 }
@@ -755,7 +829,7 @@
                 // 1. Reset state (scores only)
                 players.forEach(p => p.score = 0);
                 
-                // --- NEW: Clear undo history ---
+                // Clear undo history
                 undoHistory = [];
                 
                 // 2. Reset DOM scores
@@ -767,6 +841,7 @@
                 setControlsDisabled(false);
                 
                 // 4. Re-sort and save the new state (scores at 0)
+                // Note: winningScore is NOT reset
                 updatePlayerList(); 
                 
                 // 5. Re-check button states
@@ -775,7 +850,7 @@
             }
             
             /**
-             * --- UPDATED: Now also handles the Undo button ---
+             * --- UPDATED: Now also handles Winning Score input ---
              * Helper to enable/disable ALL game controls
              */
             function setControlsDisabled(disabled) {
@@ -786,14 +861,17 @@
                 btnAddPlayer.disabled = disabled;
                 inputPlayerName.disabled = disabled;
                 
+                // --- NEW: Disable winning score input ---
+                inputWinningScore.disabled = disabled;
+                
                 // Special handling for End Game button
                 if (disabled) {
                     btnEndGame.disabled = true;
-                    btnUndo.disabled = true; // --- NEW ---
+                    btnUndo.disabled = true;
                 } else {
                     // When re-enabling, check if it SHOULD be enabled
                     checkEndGameButton();
-                    checkUndoButton(); // --- NEW ---
+                    checkUndoButton();
                 }
             }
             
@@ -802,34 +880,46 @@
              */
             function checkEndGameButton() {
                 // Check if any player has a score other than 0
+                // Or if game is already over
+                const gameIsOver = winnerOverlay.classList.contains('show');
                 const canEndGame = players.length > 0 && players.some(p => p.score !== 0);
-                btnEndGame.disabled = !canEndGame;
+                btnEndGame.disabled = !canEndGame || gameIsOver;
             }
             
             /**
-             * --- NEW: Enables/Disables Undo button based on history ---
+             * Enables/Disables Undo button based on history
              */
             function checkUndoButton() {
-                btnUndo.disabled = (undoHistory.length === 0);
+                const gameIsOver = winnerOverlay.classList.contains('show');
+            	btnUndo.disabled = (undoHistory.length === 0) || gameIsOver;
             }
 
             /* --- LOCALSTORAGE FUNCTIONS --- */
             
             /**
-             * Saves the current 'players' array to localStorage
+             * --- UPDATED: Saves entire game state object ---
              */
             function saveGame() {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(players));
+                const gameState = {
+                    players: players,
+                    winningScore: winningScore
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
             }
 
             /**
-             * Loads and renders the game from localStorage
+             * --- UPDATED: Loads entire game state object ---
              */
             function loadGame() {
                 const savedGame = localStorage.getItem(STORAGE_KEY);
                 
                 if (savedGame) {
-                    players = JSON.parse(savedGame);
+                    const gameState = JSON.parse(savedGame);
+                    players = gameState.players || [];
+                    winningScore = gameState.winningScore || 0;
+                    
+                    // Set the input field's value
+                    inputWinningScore.value = winningScore > 0 ? winningScore : '';
                     
                     // Need to get row height before rendering
                     if (players.length > 0) {
