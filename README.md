@@ -17,11 +17,6 @@ A modern, visually stunning digital scoreboard designed for card games, board ga
 ## 🚀 Live Demo
 
 [**Click here to View Scoreboard**](https://your-username.github.io/your-repo-name)
-## 📸 Screenshots
-
-| Scoreboard Interface | Winner Celebration |
-|:---:|:---:|
-| <img src="screenshot1.jpg" width="400"> | <img src="screenshot2.jpg" width="400"> |
 
 ## 🛠️ How to Use
 
