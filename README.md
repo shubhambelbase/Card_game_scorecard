@@ -16,7 +16,7 @@ A modern, visually stunning digital scoreboard designed for card games, board ga
 
 ## 🚀 Live Demo
 
-[**Click here to View Scoreboard**](https://your-username.github.io/your-repo-name)
+[**Click here to View Scoreboard**](https://forscore.netlify.app/)
 
 ## 🛠️ How to Use
 
