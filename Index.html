@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Card Game Scoreboard</title>
+    <title>Game Scoreboard</title>
     
     <style>
         :root {
@@ -26,23 +26,26 @@
         }
 
         html, body {
-            height: 100%;
+            min-height: 100%;
         }
 
         body {
             background: var(--dark-bg);
-            /* Dark radial gradient for a "vignette" effect */
             background-image: radial-gradient(circle, #3a3a3a, #1a1a1a);
             color: var(--text-primary);
+            
+            /* Layout Fix */
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            
             padding: 2rem 1rem;
             overflow-y: auto;
             overflow-x: hidden;
         }
 
-        /* --- Main Scoreboard Container (Glass) --- */
+        /* --- Main Scoreboard Container --- */
         .scoreboard-container {
             width: 100%;
             max-width: 800px;
@@ -54,6 +57,8 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
             padding: 1.5rem 2rem;
             overflow: hidden;
+            min-height: 200px; 
+            margin-bottom: 2rem;
         }
 
         h1 {
@@ -64,19 +69,29 @@
             color: var(--text-primary);
         }
 
-        /* --- NEW: Winning Score & Add Player Forms --- */
+        /* --- Footer Styles --- */
+        .app-footer {
+            text-align: center;
+            padding: 12px;
+            font-size: 14px;
+            color: #888;
+            margin-top: auto;
+            width: 100%;
+        }
+
+        /* --- Game Setup Inputs --- */
         .game-setup {
             display: flex;
             gap: 10px;
             margin-bottom: 1.5rem;
-            flex-wrap: wrap; /* Allow wrapping on small screens */
+            flex-wrap: wrap; 
         }
         
         .winning-score-container {
             display: flex;
             align-items: center;
             gap: 8px;
-            flex-grow: 1; /* Take up space */
+            flex-grow: 1; 
         }
         
         .winning-score-container label {
@@ -101,14 +116,14 @@
         }
         
         #input-winning-score {
-            width: 100px; /* Fixed width for score */
+            width: 100px;
         }
 
         .add-player-form {
             display: flex;
             gap: 10px;
-            flex-grow: 2; /* Take up more space */
-            min-width: 250px; /* Ensure it doesn't get too small */
+            flex-grow: 2;
+            min-width: 250px;
         }
 
         #input-player-name {
@@ -137,39 +152,37 @@
 
         /* --- Player List --- */
         .player-list {
-            position: relative; /* Crucial for "top" animation */
+            position: relative; 
             transition: height 0.5s ease-in-out;
             border-top: 1px solid var(--glass-border);
             padding-top: 1.5rem;
-            min-height: 50px; /* Ensures container is visible even when empty */
+            min-height: 50px;
         }
 
         .player-row {
             display: grid;
-            grid-template-columns: 2.5fr 1fr 3fr; /* Name | Score | Controls */
+            grid-template-columns: 2.5fr 1fr 3fr; 
             align-items: center;
             gap: 1rem;
             
-            /* Glass effect for each row */
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             border-radius: 12px;
-            padding: 1rem 1.5rem;
+            padding: 0 1.5rem; 
             
-            /* Animation properties */
+            height: 85px; 
+            
             position: absolute;
             width: 100%;
             transition: top 0.5s ease-in-out, background-color 0.3s, 
                         transform 0.4s ease, opacity 0.4s ease;
         }
         
-        /* --- Deletion Animation --- */
         .player-row.deleting {
             transform: translateX(100%) scale(0.8);
             opacity: 0;
         }
 
-        /* --- Row Animations --- */
         @keyframes flash-positive {
             0% { background-color: rgba(76, 175, 80, 0.5); transform: scale(1.02); }
             100% { background-color: var(--glass-bg); transform: scale(1); }
@@ -188,17 +201,14 @@
             animation: flash-negative 0.5s ease-out;
         }
 
-        /* --- Player Row Content --- */
-        
-        /* --- Container for Name + Delete Btn --- */
+        /* --- Player Name & Delete --- */
         .player-name-container {
             display: flex;
             align-items: center;
             gap: 10px;
-            overflow: hidden; /* Prevents long names from breaking layout */
+            overflow: hidden; 
         }
 
-        /* --- Editable Player Name --- */
         .player-name {
             font-size: 1.2rem;
             font-weight: 500;
@@ -209,18 +219,17 @@
             padding: 5px;
             border-radius: 6px;
             outline: none;
-            flex-grow: 1; /* Takes up available space */
-            min-width: 0; /* Fix for flexbox overflow */
+            flex-grow: 1;
+            min-width: 0;
         }
         
         .player-name:focus {
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid var(--glass-border);
             box-shadow: 0 0 8px 0 rgba(33, 150, 243, 0.5);
-            white-space: normal; /* Allows wrapping while editing */
+            white-space: normal; 
         }
 
-        /* --- Delete Player Button --- */
         .btn-delete {
             background: rgba(244, 67, 54, 0.3);
             border: 1px solid rgba(244, 67, 54, 0.5);
@@ -232,11 +241,11 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
-            flex-shrink: 0; /* Prevents button from squishing */
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding-bottom: 2px; /* Optical centering for 'x' */
+            padding-bottom: 2px;
         }
 
         .btn-delete:hover {
@@ -346,7 +355,7 @@
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             
-            display: none; /* Hidden by default */
+            display: none;
             justify-content: center;
             align-items: center;
             z-index: 1000;
@@ -405,15 +414,15 @@
             filter: brightness(1.2);
         }
 
-        /* --- EMOJI RAIN CSS --- */
+        /* --- EMOJI RAIN --- */
         .emoji-rain {
             position: fixed;
-            top: -50px; /* Start off-screen */
+            top: -50px;
             font-size: 2rem;
             animation-name: fall;
             animation-timing-function: linear;
-            z-index: 2000; /* Above the winner overlay */
-            pointer-events: none; /* So they don't block the button */
+            z-index: 2000;
+            pointer-events: none;
         }
         
         @keyframes fall {
@@ -422,18 +431,16 @@
                 opacity: 1;
             }
             to {
-                transform: translateY(110vh); /* Fall 110% of screen height */
+                transform: translateY(110vh);
                 opacity: 0;
             }
         }
-
-
     </style>
 </head>
 <body>
 
     <div class="scoreboard-container">
-        <h1>Card Game Scoreboard</h1>
+        <h1>Game Scoreboard</h1>
 
         <div class="game-setup">
             <div class="winning-score-container">
@@ -447,14 +454,17 @@
             </div>
         </div>
 
-        <div class="player-list" id="player-list">
-            </div>
+        <div class="player-list" id="player-list"></div>
         
         <div class="game-controls">
             <button id="btn-undo" class="btn" disabled>Undo</button>
             <button id="btn-end-game" class="btn">End Game</button>
         </div>
     </div>
+
+    <footer class="app-footer">
+      © 2025 Shubham. All rights reserved.
+    </footer>
 
     <div id="winner-overlay">
         <div class="winner-box">
@@ -469,13 +479,16 @@
 
             // --- STATE ---
             let players = [];
-            let rowHeight = 85; // Default height + margin for a row
-            let emojiTimeouts = []; // Tracks emoji rain timeouts
-            const STORAGE_KEY = 'cardGameScoreboard'; // Key for localStorage
+            let rowHeight = 100; 
+            let emojiTimeouts = [];
+            const STORAGE_KEY = 'cardGameScoreboard';
             let undoHistory = []; 
-            
-            // --- NEW: State for Winning Score ---
             let winningScore = 0;
+            let sortTimer = null;
+            
+            // --- AUDIO STATE ---
+            let audioCtx = null;
+            let winLoopId = null; // Stores the loop Interval ID
 
             // --- DOM SELECTORS ---
             const playerList = document.getElementById('player-list');
@@ -486,48 +499,33 @@
             const winnerText = document.getElementById('winner-text');
             const btnNewGame = document.getElementById('btn-new-game');
             const btnUndo = document.getElementById('btn-undo');
-            
-            // --- NEW: Winning Score selector ---
             const inputWinningScore = document.getElementById('input-winning-score');
 
             // --- INITIALIZATION ---
             function init() {
-                // Add event listeners
                 btnAddPlayer.addEventListener('click', handleAddPlayer);
                 inputPlayerName.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') handleAddPlayer();
                 });
                 
-                // --- NEW: Listener for Winning Score input ---
                 inputWinningScore.addEventListener('change', handleWinningScoreChange);
-                
-                // Use event delegation for score and delete buttons
                 playerList.addEventListener('click', handlePlayerListClick);
-                
-                // Event listeners for editable names
                 playerList.addEventListener('keydown', handleNameKeydown);
-                playerList.addEventListener('blur', handleNameBlur, true); // Use capture phase
+                playerList.addEventListener('blur', handleNameBlur, true);
                 
                 btnEndGame.addEventListener('click', handleEndGame);
                 btnNewGame.addEventListener('click', startNewGame);
                 btnUndo.addEventListener('click', handleUndo);
                 
-                // Click overlay to close it
                 winnerOverlay.addEventListener('click', (e) => {
-                    if (e.target === winnerOverlay) {
-                        closeWinnerOverlay();
-                    }
+                    if (e.target === winnerOverlay) closeWinnerOverlay();
                 });
                 
-                // Load saved game on startup
                 loadGame();
             }
             
             // --- CORE FUNCTIONS ---
 
-            /**
-             * Handles adding a new player
-             */
             function handleAddPlayer() {
                 const name = inputPlayerName.value.trim();
                 if (name) {
@@ -536,9 +534,6 @@
                 }
             }
 
-            /**
-             * Adds a player to the state and creates their DOM element
-             */
             function addPlayer(name) {
                 const newPlayer = {
                     id: Date.now(),
@@ -548,23 +543,12 @@
                 players.push(newPlayer);
                 
                 const playerEl = createPlayerElement(newPlayer);
-                
-                // Get row height dynamically on first add
-                if (players.length === 1) {
-                    playerList.appendChild(playerEl);
-                    rowHeight = playerEl.offsetHeight + 16;
-                    playerList.removeChild(playerEl); 
-                }
-                
                 playerList.appendChild(playerEl);
                 
-                updatePlayerList(); // Will also call saveGame()
-                checkEndGameButton(); // Update button state
+                updatePlayerList(); 
+                checkEndGameButton(); 
             }
 
-            /**
-             * Creates the HTML element for a single player
-             */
             function createPlayerElement(player) {
                 const row = document.createElement('div');
                 row.className = 'player-row';
@@ -572,7 +556,7 @@
                 
                 row.innerHTML = `
                     <div class="player-name-container">
-                        <div class="player-name" contenteditable="true" spellcheck="false" title="Click to edit">${player.name}</div>
+                        <div class="player-name" contenteditable="true" spellcheck="false" title="Click to edit"></div>
                         <button class="btn-delete" title="Delete player">&times;</button>
                     </div>
                     <span class="player-score">${player.score}</span>
@@ -583,99 +567,74 @@
                         <button class="btn-score negative" data-amount="-1">-1</button>
                     </div>
                 `;
+                
+                row.querySelector('.player-name').textContent = player.name;
+                
                 return row;
             }
 
-            /**
-             * Handles clicks inside the player list (delegated)
-             */
             function handlePlayerListClick(e) {
-                // Check for Score Button click
                 const scoreButton = e.target.closest('.btn-score');
                 if (scoreButton && !scoreButton.disabled) {
                     const amount = parseInt(scoreButton.dataset.amount, 10);
                     const playerRow = e.target.closest('.player-row');
                     const id = parseInt(playerRow.dataset.playerId, 10);
                     
+                    playScoreSound(amount); 
                     updateScore(id, amount);
                 }
                 
-                // Check for Delete Button click
                 const deleteButton = e.target.closest('.btn-delete');
                 if (deleteButton && !deleteButton.disabled) {
                     handleDeletePlayer(deleteButton);
                 }
             }
             
-            /**
-             * Handles deleting a player
-             */
             function handleDeletePlayer(button) {
                 const playerRow = button.closest('.player-row');
                 const id = parseInt(playerRow.dataset.playerId, 10);
                 
-                // 1. Add animation class
                 playerRow.classList.add('deleting');
                 
-                // 2. Wait for animation to finish
                 setTimeout(() => {
-                    // 3. Remove from state
                     players = players.filter(p => p.id !== id);
-                    
-                    // Remove deleted player from undo history
                     undoHistory = undoHistory.filter(action => action.playerId !== id);
                     checkUndoButton();
                     
-                    // 4. Remove from DOM
                     playerRow.remove();
-                    
-                    // 5. Re-sort and save
                     updatePlayerList();
                     checkEndGameButton();
                 }, 400);
             }
             
-            /**
-             * Handles 'Enter' key on editable names
-             */
             function handleNameKeydown(e) {
                 if (e.target.classList.contains('player-name')) {
                     if (e.key === 'Enter') {
-                        e.preventDefault(); // Prevent new line
-                        e.target.blur();    // Trigger blur to save
+                        e.preventDefault();
+                        e.target.blur();
                     }
                 }
             }
             
-            /**
-             * Handles saving the name on blur
-             */
             function handleNameBlur(e) {
                 if (e.target.classList.contains('player-name')) {
                     const playerRow = e.target.closest('.player-row');
                     const id = parseInt(playerRow.dataset.playerId, 10);
                     const player = players.find(p => p.id === id);
-                    
                     if (!player) return;
                     
                     const newName = e.target.textContent.trim();
-                    
                     if (newName) {
                         player.name = newName;
-                        e.target.textContent = newName;
                     } else {
                         e.target.textContent = player.name;
                     }
-                    saveGame(); // Save name change
+                    saveGame();
                 }
             }
 
-            /**
-             * --- NEW: Handles updating the winning score ---
-             */
             function handleWinningScoreChange() {
                 winningScore = parseInt(inputWinningScore.value, 10) || 0;
-                // If score is 0 or less, clear the input
                 if (winningScore <= 0) {
                     winningScore = 0;
                     inputWinningScore.value = '';
@@ -683,80 +642,59 @@
                 saveGame();
             }
 
-            /**
-             * Updates a player's score, logs history, and calls applyScoreChange
-             */
             function updateScore(id, amount) {
-                // Add this action to the undo history
                 undoHistory.push({ playerId: id, amount: amount });
-                checkUndoButton(); // Enable the undo button
-
-                // Apply the actual change
+                checkUndoButton();
                 applyScoreChange(id, amount);
             }
 
-            /**
-             * --- UPDATED: Now checks for winner ---
-             * Applies a score change WITHOUT logging history
-             */
             function applyScoreChange(id, amount) {
                 const player = players.find(p => p.id === id);
                 if (!player) return;
                 
-                // Check if game is already over (e.g., via Undo)
                 const gameAlreadyOver = btnEndGame.disabled;
-
                 player.score += amount;
                 
                 const playerRow = document.querySelector(`[data-player-id="${id}"]`);
-                if (!playerRow) return;
-                
-                const scoreSpan = playerRow.querySelector('.player-score');
-                scoreSpan.textContent = player.score;
-                
-                const flashClass = amount > 0 ? 'flash-positive' : 'flash-negative';
-                playerRow.classList.add(flashClass);
-                setTimeout(() => playerRow.classList.remove(flashClass), 500);
+                if (playerRow) {
+                    const scoreSpan = playerRow.querySelector('.player-score');
+                    scoreSpan.textContent = player.score;
+                    
+                    const flashClass = amount > 0 ? 'flash-positive' : 'flash-negative';
+                    playerRow.classList.add(flashClass);
+                    setTimeout(() => playerRow.classList.remove(flashClass), 500);
+                }
 
-                updatePlayerList(); // Re-sort and save
                 checkEndGameButton();
+                saveGame(); 
 
-                // --- NEW: Check for winner ---
-                // Only trigger if winning score is set, player's score is high enough,
-                // and the game isn't *already* in an "ended" state.
                 if (!gameAlreadyOver && winningScore > 0 && player.score >= winningScore) {
-                    // Use a timeout to let the flash animation play, then end game
                     setTimeout(() => {
                         handleEndGame();
-                    }, 500); // Wait for flash to finish
+                    }, 500);
+                    return; 
                 }
+
+                clearTimeout(sortTimer);
+                sortTimer = setTimeout(() => {
+                    updatePlayerList(); 
+                }, 800);
             }
             
-            /**
-             * Handles the Undo button click
-             */
             function handleUndo() {
                 if (undoHistory.length === 0) return;
-                
-                // If game is over, re-enable controls
-                if (btnEndGame.disabled) {
-                    setControlsDisabled(false);
-                }
+                if (btnEndGame.disabled) setControlsDisabled(false);
                 
                 const lastAction = undoHistory.pop();
-                checkUndoButton(); // Update button state
+                checkUndoButton(); 
                 
-                // Find player (they may have been deleted)
                 const player = players.find(p => p.id === lastAction.playerId);
-                if (!player) return; // Player was deleted, so we just discard the undo.
+                if (!player) return;
                 
                 const reverseAmount = -lastAction.amount;
                 applyScoreChange(lastAction.playerId, reverseAmount);
             }
 
-            /**
-             * Sorts players, animates them, and saves the game
-             */
             function updatePlayerList() {
                 players.sort((a, b) => b.score - a.score);
                 
@@ -770,12 +708,9 @@
                     }
                 });
                 
-                saveGame(); // Save game on every update
+                saveGame();
             }
             
-            /**
-             * Ends the game, calculates winner, and shows overlay
-             */
             function handleEndGame() {
                 setControlsDisabled(true);
                 
@@ -785,20 +720,15 @@
                     return;
                 }
                 
-                // Find highest score (could be more than winningScore if +3 pushed it over)
                 const maxScore = Math.max(...players.map(p => p.score));
-                
-                // Find all players with that high score
                 const winners = players.filter(p => p.score === maxScore);
                 
                 let winnerMessage = "";
                 if (winners.length > 1) {
-                    // Check if it's a tie *at or above* the winning score
                     if (winningScore > 0 && maxScore >= winningScore) {
-                        winnerMessage = `It's a tie at ${maxScore} between: ${winners.map(p => p.name).join(', ')}`;
+                        winnerMessage = `Tie at ${maxScore}: ${winners.map(p => p.name).join(', ')}`;
                     } else {
-                        // Manual end game tie
-                        winnerMessage = `It's a tie between: ${winners.map(p => p.name).join(', ')}`;
+                        winnerMessage = `Tie: ${winners.map(p => p.name).join(', ')}`;
                     }
                 } else {
                     winnerMessage = winners[0].name;
@@ -808,52 +738,37 @@
                 winnerOverlay.classList.add('show');
                 
                 startEmojiRain();
+                
+                // --- START WINNING LOOP ---
+                startWinLoop();
             }
             
-            /**
-             * Hides overlay and stops rain, but does NOT reset game
-             */
             function closeWinnerOverlay() {
                 winnerOverlay.classList.remove('show');
-                // Stop any existing or pending rain
                 document.querySelectorAll('.emoji-rain').forEach(emoji => emoji.remove());
                 emojiTimeouts.forEach(clearTimeout);
                 emojiTimeouts = [];
+                
+                // --- STOP WINNING LOOP ---
+                stopWinLoop();
             }
 
-            /**
-             * Resets the game to its initial state, but keeps players.
-             */
             function startNewGame() {
-                closeWinnerOverlay(); // Close overlay and stop rain
+                closeWinnerOverlay(); // Handles loop stop too
             
-                // 1. Reset state (scores only)
                 players.forEach(p => p.score = 0);
-                
-                // Clear undo history
                 undoHistory = [];
                 
-                // 2. Reset DOM scores
                 document.querySelectorAll('.player-row .player-score').forEach(scoreEl => {
                     scoreEl.textContent = '0';
                 });
                 
-                // 3. Re-enable controls
                 setControlsDisabled(false);
-                
-                // 4. Re-sort and save the new state (scores at 0)
-                // Note: winningScore is NOT reset
                 updatePlayerList(); 
-                
-                // 5. Re-check button states
                 checkEndGameButton();
                 checkUndoButton();
             }
             
-            /**
-             * --- UPDATED: Now also handles Winning Score input ---
-             * Helper to enable/disable ALL game controls
-             */
             function setControlsDisabled(disabled) {
                 document.querySelectorAll('.btn-score').forEach(btn => btn.disabled = disabled);
                 document.querySelectorAll('.btn-delete').forEach(btn => btn.disabled = disabled);
@@ -861,45 +776,29 @@
                 
                 btnAddPlayer.disabled = disabled;
                 inputPlayerName.disabled = disabled;
-                
-                // --- NEW: Disable winning score input ---
                 inputWinningScore.disabled = disabled;
                 
-                // Special handling for End Game button
                 if (disabled) {
                     btnEndGame.disabled = true;
                     btnUndo.disabled = true;
                 } else {
-                    // When re-enabling, check if it SHOULD be enabled
                     checkEndGameButton();
                     checkUndoButton();
                 }
             }
             
-            /**
-             * Enables/Disables End Game button based on score
-             */
             function checkEndGameButton() {
-                // Check if any player has a score other than 0
-                // Or if game is already over
                 const gameIsOver = winnerOverlay.classList.contains('show');
                 const canEndGame = players.length > 0 && players.some(p => p.score !== 0);
                 btnEndGame.disabled = !canEndGame || gameIsOver;
             }
             
-            /**
-             * Enables/Disables Undo button based on history
-             */
             function checkUndoButton() {
                 const gameIsOver = winnerOverlay.classList.contains('show');
             	btnUndo.disabled = (undoHistory.length === 0) || gameIsOver;
             }
 
-            /* --- LOCALSTORAGE FUNCTIONS --- */
-            
-            /**
-             * --- UPDATED: Saves entire game state object ---
-             */
+            /* --- LOCALSTORAGE --- */
             function saveGame() {
                 const gameState = {
                     players: players,
@@ -908,9 +807,6 @@
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
             }
 
-            /**
-             * --- UPDATED: Loads entire game state object ---
-             */
             function loadGame() {
                 const savedGame = localStorage.getItem(STORAGE_KEY);
                 
@@ -919,37 +815,122 @@
                     players = gameState.players || [];
                     winningScore = gameState.winningScore || 0;
                     
-                    // Set the input field's value
                     inputWinningScore.value = winningScore > 0 ? winningScore : '';
                     
-                    // Need to get row height before rendering
-                    if (players.length > 0) {
-                        const tempPlayer = createPlayerElement(players[0]);
-                        playerList.appendChild(tempPlayer);
-                        rowHeight = tempPlayer.offsetHeight + 16;
-                        playerList.removeChild(tempPlayer);
-                    }
-                    
-                    // Render all players
-                    playerList.innerHTML = ''; // Clear list
+                    playerList.innerHTML = '';
                     players.forEach(player => {
                         const playerEl = createPlayerElement(player);
                         playerList.appendChild(playerEl);
                     });
                     
-                    // Set correct positions
                     updatePlayerList();
-                    // Set correct button state
                     checkEndGameButton();
-                    checkUndoButton(); // History is empty on load
+                    checkUndoButton();
+                }
+            }
+            
+            /* --- AUDIO FUNCTIONS --- */
+            
+            function initAudio() {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return false;
+                
+                if (!audioCtx) {
+                    audioCtx = new AudioContext();
+                }
+                
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                
+                return true;
+            }
+
+            function playScoreSound(amount) {
+                if (!initAudio()) return;
+                
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                const now = audioCtx.currentTime;
+                
+                if (amount > 0) {
+                    osc.type = 'sine';
+                    const baseFreq = 600; 
+                    osc.frequency.setValueAtTime(baseFreq + ((amount - 1) * 100), now);
+                    
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                    
+                } else {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(150, now);
+                    
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                }
+            }
+            
+            // --- NEW: LOOP CONTROLLERS ---
+
+            function startWinLoop() {
+                if (winLoopId) return; // Already looping
+                
+                // Play immediately
+                playWinSound(); 
+                
+                // Then repeat every 2 seconds
+                winLoopId = setInterval(() => {
+                    playWinSound();
+                }, 2000); 
+            }
+            
+            function stopWinLoop() {
+                if (winLoopId) {
+                    clearInterval(winLoopId);
+                    winLoopId = null;
                 }
             }
 
-            /* --- EMOJI RAIN JAVASCRIPT --- */
+            function playWinSound() {
+                if (!initAudio()) return;
+                
+                // Extended melody for loop (C4, E4, G4, C5, G4, E4)
+                const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63]; 
+                const duration = 0.15; 
+                const now = audioCtx.currentTime;
+                
+                notes.forEach((note, index) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    
+                    osc.type = 'triangle'; 
+                    osc.frequency.value = note;
+                    
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    
+                    const startTime = now + (index * duration);
+                    
+                    osc.start(startTime);
+                    
+                    gain.gain.setValueAtTime(0.2, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+                    
+                    osc.stop(startTime + duration);
+                });
+            }
 
-            /**
-             * Creates a single falling emoji
-             */
+            /* --- EMOJI RAIN --- */
             function createEmoji() {
                 const emoji = document.createElement('div');
                 emoji.classList.add('emoji-rain');
@@ -964,9 +945,6 @@
                 document.body.appendChild(emoji);
             }
             
-            /**
-             * Starts the emoji rain effect
-             */
             function startEmojiRain(count = 50) {
                 emojiTimeouts.forEach(clearTimeout);
                 emojiTimeouts = [];
@@ -980,15 +958,12 @@
                     emojiTimeouts.push(timeoutId);
                 }
             }
-            /* --- END EMOJI JAVASCRIPT --- */
-
 
             // --- RUN ---
             init();
         });
   </script>
 
-<footer style="text-align:center;padding:12px;font-size:14px;color:#888;">
-  © 2025 Shubham. All rights reserved.
-</footer>
+</body>
+</html>
 
